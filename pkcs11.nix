@@ -17,7 +17,7 @@ stdenv.mkDerivation {
   src = fetchurl {
     url = "https://files.fineid.fi/download/atostek/4.4.1.0/linux/AtostekID_DEB_4.4.1.0.deb";
     # TODO: same hash as package.nix — consider a shared fetcher
-    hash = lib.fakeHash;
+    hash = "sha256-b+w9ib8v+VovEqzS0oVjuaTOQW2C3lLogkAcS85Mpkc=";
   };
 
   nativeBuildInputs = [ dpkg autoPatchelfHook ];

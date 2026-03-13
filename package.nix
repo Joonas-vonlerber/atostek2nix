@@ -12,6 +12,7 @@
 , gnutls
 , glib
 , zlib
+, openssl
 }:
 
 let
@@ -26,12 +27,13 @@ let
     src = fetchurl {
       url = "https://files.fineid.fi/download/atostek/${version}/linux/AtostekID_DEB_${version}.deb";
       # TODO: replace with actual hash after first build
-      hash = lib.fakeHash;
+      hash = "sha256-b+w9ib8v+VovEqzS0oVjuaTOQW2C3lLogkAcS85Mpkc=";
     };
 
     nativeBuildInputs = [
       dpkg
       autoPatchelfHook
+      qt6.wrapQtAppsHook
     ];
 
     # Libs that autoPatchelfHook will resolve NEEDED entries against.
@@ -45,9 +47,9 @@ let
       gnutls
       glib
       zlib
-      stdenv.cc.cc.lib  # libstdc++
+      openssl          # libcrypto.so.3 — must come from nixpkgs, not bundled
+      stdenv.cc.cc.lib # libstdc++
     ];
-
     unpackPhase = ''
       dpkg-deb -x $src .
     '';
@@ -64,10 +66,19 @@ let
       # PIN dialog library (loaded by soname, needs to be findable)
       install -Dm755 usr/lib/libAskPinLibrary.so $out/lib/libAskPinLibrary.so
 
-      # Bundled libraries — these ship specific versions the binary expects
-      # (libcrypto 3.3.2, botan-2, qpdf 29, minizip, libjpeg, zlib)
+      # Bundled libraries — keep only the ones that don't conflict
+      # with nixpkgs system libs. We REMOVE:
+      #   libcrypto.so.3 (OpenSSL 3.3.2) — conflicts with nixpkgs' libssl 3.6.x
+      #     which needs matching libcrypto. Using system openssl for both.
+      #   libz.so.1.3.1 — nixpkgs zlib is fine, avoids similar shadowing.
+      # We KEEP: botan-2, qpdf, minizip, libjpeg (not in the system dep chain).
       install -dm755 $out/lib/atostekid
-      cp -a usr/lib/atostekid/* $out/lib/atostekid/
+      for lib in usr/lib/atostekid/*; do
+        case "$(basename "$lib")" in
+          libcrypto.so*|libz.so*) ;; # skip — provided by nixpkgs
+          *) cp -a "$lib" $out/lib/atostekid/ ;;
+        esac
+      done
 
       # Documentation
       install -dm755 $out/share/doc/atostekid
@@ -137,6 +148,7 @@ buildFHSEnv {
     nss
     nspr
     gnutls
+    openssl
     qt6.qtbase
     qt6.qtwayland
   ];
