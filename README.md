@@ -1,7 +1,5 @@
 # Atostek ID for NixOS
 
-## This is entirely AI slopped :) Thank you claude... please use with care
-
 Nix flake packaging of [Atostek ID](https://dvv.fi/en/card-reader-software) — the official Finnish DVV (Digital and Population Data Services Agency) smart card reader software.
 
 Supports DVV-issued certificate cards for:
@@ -38,18 +36,30 @@ The binary contains ~8 hardcoded `/usr/*` paths that can't be fixed by `patchelf
 }
 ```
 
-### 2. NixOS module (system-level)
+### 2. Apply the overlay to your nixpkgs
+
+This is the key step — it makes `pkgs.atostek-id` and `pkgs.atostek-id-pkcs11` available, built with YOUR nixpkgs config (including `allowUnfree`).
+
+```nix
+# In your NixOS configuration (e.g. flake.nix outputs)
+nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+  modules = [
+    { nixpkgs.overlays = [ inputs.atostek-id.overlays.default ]; }
+    inputs.atostek-id.nixosModules.atostek-id
+    # ... your other modules
+  ];
+};
+```
+
+### 3. NixOS module (system-level)
 
 ```nix
 # In your NixOS configuration module
-{ inputs, ... }:
 {
-  imports = [ inputs.atostek-id.nixosModules.atostek-id ];
-
   programs.atostek-id = {
     enable = true;
-    package = inputs.atostek-id.packages.x86_64-linux.atostek-id;
-    pkcs11Package = inputs.atostek-id.packages.x86_64-linux.atostek-id-pkcs11;
+    # package and pkcs11Package default to pkgs.atostek-id / pkgs.atostek-id-pkcs11
+    # via the overlay — no need to set them explicitly.
 
     # Optional: set default language
     configFile = {
@@ -66,21 +76,16 @@ This gives you:
 - `atostekid` binary on `$PATH`
 - `certutil` (nss-tools) available
 
-### 3. Home Manager module (per-user)
+### 4. Home Manager module (per-user)
 
 ```nix
 # In your Home Manager configuration
-{ inputs, ... }:
-let
-  atostekPkgs = inputs.atostek-id.packages.x86_64-linux;
-in
 {
   imports = [ inputs.atostek-id.homeManagerModules.atostek-id ];
 
   programs.atostek-id = {
     enable = true;
-    package = atostekPkgs.atostek-id;
-    pkcs11ModulePath = "${atostekPkgs.atostek-id-pkcs11}/lib/Atostek-ID-PKCS11.so";
+    # Defaults from the overlay — no explicit package needed.
 
     autostart = true;          # XDG autostart entry
     setupBrowserCerts = true;  # install SCS/ehoito CA certs in browsers
@@ -92,7 +97,7 @@ in
 }
 ```
 
-### 4. Desktop environment: tray icon
+### 5. Desktop environment: tray icon
 
 Atostek ID uses a tray indicator (AppIndicator). You need support in your DE:
 

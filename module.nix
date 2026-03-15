@@ -9,11 +9,15 @@ in
 
     package = lib.mkOption {
       type = lib.types.package;
+      default = pkgs.atostek-id;
+      defaultText = lib.literalExpression "pkgs.atostek-id";
       description = "The Atostek ID FHS-wrapped package.";
     };
 
     pkcs11Package = lib.mkOption {
       type = lib.types.package;
+      default = pkgs.atostek-id-pkcs11;
+      defaultText = lib.literalExpression "pkgs.atostek-id-pkcs11";
       description = "The standalone Atostek ID PKCS#11 module package.";
     };
 

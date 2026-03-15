@@ -18,6 +18,8 @@ in
 
     package = lib.mkOption {
       type = lib.types.package;
+      default = pkgs.atostek-id;
+      defaultText = lib.literalExpression "pkgs.atostek-id";
       description = "The Atostek ID FHS-wrapped package.";
     };
 
@@ -63,6 +65,8 @@ in
 
     pkcs11ModulePath = lib.mkOption {
       type = lib.types.str;
+      default = "${pkgs.atostek-id-pkcs11}/lib/Atostek-ID-PKCS11.so";
+      defaultText = lib.literalExpression ''"''${pkgs.atostek-id-pkcs11}/lib/Atostek-ID-PKCS11.so"'';
       description = "Path to the Atostek ID PKCS#11 .so file.";
     };
   };

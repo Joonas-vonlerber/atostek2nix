@@ -5,12 +5,17 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs =
+    { self, nixpkgs }:
     let
       system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
+      pkgs = import nixpkgs { inherit system;};
     in
     {
+      overlays.default = final: prev: {
+        atostek-id = final.callPackage ./package.nix { };
+        atostek-id-pkcs11 = final.callPackage ./pkcs11.nix { };
+      };
       packages.${system} = {
         atostek-id = pkgs.callPackage ./package.nix { };
         atostek-id-pkcs11 = pkgs.callPackage ./pkcs11.nix { };
