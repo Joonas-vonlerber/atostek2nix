@@ -1,3 +1,5 @@
+# SUPER SLOPPED :) Thank you claude
+
 # Atostek ID for NixOS
 
 Nix flake packaging of [Atostek ID](https://dvv.fi/en/card-reader-software) — the official Finnish DVV (Digital and Population Data Services Agency) smart card reader software.
